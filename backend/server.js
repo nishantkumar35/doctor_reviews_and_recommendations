@@ -11,10 +11,15 @@ const aiRoute = require("./route/searchRoutes");
 const { loadModel } = require("./ai/aiClassifier");
 
 // Middlewares
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://doctor-reviews-and-recommendations.vercel.app",
+    ],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
