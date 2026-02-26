@@ -7,12 +7,14 @@ const {
   getAllDoctors,
   getMyDoctorProfile,
   getSingleDoctor,
-  updateDoctorProfile
+  updateDoctorProfile,
+  similarDoctors
 } = require('../controllers/doctorController');
 
 router.get('/all', getAllDoctors);
 router.get('/profile', protect, allowRole("doctor"), getMyDoctorProfile);
 
+router.get('/similar/:doctorId', similarDoctors);
 router.get('/:doctorId', getSingleDoctor);
 
 router.put('/update', protect, allowRole("doctor"), upload.single("image"), updateDoctorProfile);

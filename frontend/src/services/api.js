@@ -29,6 +29,7 @@ export const doctorAPI = {
   updateProfile: (formData) => api.put('/doctor/update', formData),
   getAll: () => api.get('/doctor/all'),
   getSingle: (id) => api.get(`/doctor/${id}`),
+  getSimilarDoctors: (id) => api.get(`/doctor/similar/${id}`),
 };
 
 // User API

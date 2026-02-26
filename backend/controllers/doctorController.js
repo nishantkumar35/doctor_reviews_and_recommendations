@@ -121,9 +121,32 @@ const getSingleDoctor = async (req, res) => {
   }
 };
 
+const similarDoctors = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    const allDoctors = await Doctor.find({
+      _id: { $ne: doctor._id },
+      specialization: doctor.specialization,
+    })
+      .populate("userId", "name image")
+      .lean();
+
+    res.json(allDoctors);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   getMyDoctorProfile,
   updateDoctorProfile,
   getAllDoctors,
   getSingleDoctor,
+  similarDoctors
 };

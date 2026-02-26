@@ -180,6 +180,7 @@ const SearchResults = () => {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* nsa */}
               {results.doctors.map((doctor, idx) => (
                 <Link key={doctor._id} to={`/doctor/${doctor._id}`}>
                   <motion.div
@@ -251,6 +252,7 @@ const SearchResults = () => {
                   </motion.div>
                 </Link>
               ))}
+              {/* cbn */}
             </div>
 
             {results.doctors.length === 0 && (
