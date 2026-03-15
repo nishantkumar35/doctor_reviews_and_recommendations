@@ -23,3 +23,4 @@ const Input = ({ label, icon: Icon, error, ...props }) => {
 };
 
 export default Input;
+
