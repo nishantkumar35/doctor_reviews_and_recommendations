@@ -143,10 +143,41 @@ const similarDoctors = async (req, res) => {
   }
 };
 
+const addFilter = async (req,res)=>{
+  try{
+    const { clinicAddress, specialization, minPrice, maxPrice } = req.query;
+    let query = {};
+    if(clinicAddress){
+      query.clinicAddress = { $regex: clinicAddress, $options: "i" };
+    }
+    if(specialization){
+      query.specialization = specialization;
+    }
+    if(minPrice || maxPrice){
+      query.price = {};
+      if(minPrice){
+        query.price.$gte = Number(minPrice);
+      }
+      if(maxPrice){
+        query.price.$lte = Number(maxPrice);
+      }
+    }
+    const doctors = await Doctor.find(query).populate("userId", "name email image");
+    if(doctors.length === 0){
+      return res.status(404).json({ message: "No doctors found matching the criteria" });
+    }
+    res.json(doctors);
+  }
+  catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   getMyDoctorProfile,
   updateDoctorProfile,
   getAllDoctors,
   getSingleDoctor,
-  similarDoctors
+  similarDoctors,
+  addFilter
 };

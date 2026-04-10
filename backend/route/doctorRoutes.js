@@ -8,10 +8,12 @@ const {
   getMyDoctorProfile,
   getSingleDoctor,
   updateDoctorProfile,
-  similarDoctors
+  similarDoctors,
+  addFilter
 } = require('../controllers/doctorController');
 
 router.get('/all', getAllDoctors);
+router.get('/filter', addFilter);
 router.get('/profile', protect, allowRole("doctor"), getMyDoctorProfile);
 
 router.get('/similar/:doctorId', similarDoctors);
