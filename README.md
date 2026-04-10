@@ -1,160 +1,162 @@
-# Doctor Review Management System
-A comprehensive full-stack platform for doctor reviews, appointments, and health recommendations built with MERN stack.
+# 👨‍⚕️ Doctor Review & Recommendation System
 
-🚀 Quick Start
-Prerequisites
-Node.js (v14+)
-MongoDB Atlas account (or local MongoDB)
-npm or yarn
-Installation
-Install Dependencies
-# Backend
-cd backend
-npm install
+A robust full-stack platform for doctor reviews, AI-powered search, and personalized health professional recommendations. Built with the **MERN** stack, optimized with **Redis**, and enhanced with **Xenova Transformers** for intelligent classification.
 
-# Frontend
-cd ../frontend
-npm install
-Environment Setup
-The .env files are already configured! If you need to recreate them:
+---
 
-backend/.env:
+## 🚀 Quick Start
 
-PORT=3000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-REDIS_URL=your_redis_url
+### Prerequisites
+- **Node.js**: v18+
+- **MongoDB**: Atlas account or local instance
+- **Redis**: For caching and session management
+- **Cloudinary**: For image storage
 
-frontend/.env:
+### Installation
 
-VITE_BACKEND_URL=http://localhost:3000/api
-Start the Application
-# Terminal 1 - Backend
-cd backend
-npm start
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd DoctorReview
+   ```
 
-# Terminal 2 - Frontend
-cd frontend
-npm run dev
-Access the Application
-Frontend: http://localhost:5173
-Backend API: http://localhost:3000/api
-🌱 Seed Database (Optional)
-To populate with demo data:
+2. **Install Dependencies**
+   ```bash
+   # Backend
+   cd backend
+   npm install
 
-cd backend
-# Note: Ensure seed.js exists in the backend directory
-node seed.js
-Demo Credentials:
+   # Frontend
+   cd ../frontend
+   npm install
+   ```
 
-Admin: admin@demo.com / admin123
-Doctor: doctor@demo.com / doctor123
-Patient: patient@demo.com / patient123
-✨ Features
-✅ User Authentication & Authorization (JWT)
-✅ Doctor Registration & Verification
-✅ Appointment Booking System
-✅ Review & Rating System
-✅ UPI QR Code Payment Integration
-✅ 2-Step Payment & Appointment Approval
-✅ Detailed Digital Booking Receipts
-✅ Email Notifications
-✅ Favorites/Wishlist
-✅ Admin Dashboard
-✅ Analytics & Reports
-✅ AI Health Assistant
-✅ Advanced Search & Filtering
-✅ Dark Mode Support
-🛠️ Technology Stack
-Frontend
-React (Vite)
-Tailwind CSS
-Shadcn/UI Components
-React Router
-Axios
-Lucide React Icons
-Backend
-Node.js & Express
-MongoDB & Mongoose
-JWT Authentication
-Cloudinary (Image Uploads)
-Nodemailers (Email)
-📁 Project Structure
+3. **Environment Setup**
+   
+   **`backend/.env`**:
+   ```env
+   PORT=3000
+   MONGO_URI=your_mongodb_connection_string
+   JWT_SECRET=your_jwt_secret
+   GOOGLE_CLIENT_ID=your_google_client_id
+   GOOGLE_CLIENT_SECRET=your_google_client_secret
+   EMAIL_USER=your_email@gmail.com
+   EMAIL_PASS=your_gmail_app_password
+   CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
+   REDIS_URL=your_redis_connection_url
+   ```
+
+   **`frontend/.env`**:
+   ```env
+   VITE_BACKEND_URL=http://localhost:3000/api
+   ```
+
+4. **Start Development**
+   ```bash
+   # Terminal 1: Backend
+   cd backend
+   npm start
+
+   # Terminal 2: Frontend
+   cd frontend
+   npm run dev
+   ```
+
+---
+
+## ✨ Core Features
+
+### 🔐 Advanced Authentication
+- **Dual Flow**: Traditional Email/Password and Google OAuth integration.
+- **Secure OTP**: Two-factor verification via Email (Nodemailer).
+- **JWT Protection**: Secure cookie-based or header-based authentication.
+
+### 🤖 AI-Powered Search
+- **Intelligent Classification**: Leverages `@xenova/transformers` to classify search queries and match them with relevant specialists.
+- **Similar Doctors**: Algorithm-driven recommendations for finding alternative specialists.
+
+### 🩺 Doctor Management
+- **Professional Profiles**: Detailed portfolios for doctors including specialties, ratings, and reviews.
+- **Application Workflow**: Seamless transition from user to doctor profile with specialized application forms.
+- **Doctor Dashboard**: Dedicated analytics and review management for medical professionals.
+
+### 💬 Review & Interaction
+- **Multi-Level Feedback**: Users can rate and review doctors; doctors can respond to feedback.
+- **Review Moderation**: Edit/Delete capabilities for users on their own feedback.
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React 19, Vite, Tailwind CSS 4, Framer Motion, Lucide React, Axios |
+| **Backend** | Node.js, Express 5, Mongoose, JWT |
+| **Storage & Performance** | MongoDB, Redis (Caching/Performance), Cloudinary (Images) |
+| **Intelligence** | Xenova Transformers (Transformers.js) |
+| **Communication** | Nodemailer (OTP/Notifications) |
+
+---
+
+## 📁 Project Structure
+
+```text
 DoctorReview/
-├── backend/              # Backend
-│   ├── .env            # Environment variables
-│   ├── models/          # Database models
-│   ├── route/           # API routes
-│   ├── controllers/    # Business logic
-│   └── utils/           # Utilities
-│
-└── frontend/              # Frontend
-    ├── .env            # Environment variables
+├── backend/
+│   ├── ai/             # AI Sentiment & Classification (Transformers.js)
+│   ├── config/         # DB & Redis connection logic
+│   ├── controllers/    # Business logic (Auth, Doctor, Review, Search)
+│   ├── middleware/     # Auth (Protect), Role checks, Image processing
+│   ├── models/         # Mongoose User, Doctor, and Review schemas
+│   ├── route/          # Express API endpoints
+│   └── utils/          # Helper functions & Error handlers
+└── frontend/
     ├── src/
-    │   ├── pages/      # Page components
-    │   ├── components/ # Reusable components
-    │   └── context/    # React contexts
-🔐 Security
-All .env files are in .gitignore
-JWT tokens stored in HttpOnly cookies
-Password hashing with bcryptjs
-CORS configured for security
-📝 API Endpoints
-Authentication
-POST /api/auth/register - Register user
-POST /api/auth/login - Login
-POST /api/auth/logout - Logout
-GET /api/auth/me - Get current user
-Doctors
-GET /api/doctors - Get all doctors (with filters)
-GET /api/doctors/:id - Get doctor details
-POST /api/doctors - Create doctor profile
-PATCH /api/doctors - Update doctor profile
-Appointments
-GET /api/appointments - Get user appointments
-POST /api/appointments - Book appointment
-PATCH /api/appointments/:id - Update appointment
-PATCH /api/appointments/:id/reschedule - Reschedule
-Reviews
-GET /api/reviews/doctor/:id - Get doctor reviews
-POST /api/reviews - Add review
-POST /api/reviews/:reviewId/reply - Reply to review
-Payments
-POST /api/payments/upi/get-details - Get UPI payment details
-POST /api/payments/upi/confirm - Confirm UPI payment
-GET /api/payments/history - Get payment history
-🆘 Troubleshooting
-MongoDB Connection Error
-Check internet connection
-Verify MongoDB Atlas IP whitelist
-Check connection string in backend/.env
-Port Already in Use
-Change PORT in backend/.env
-Or kill process using port 3000/5173
-Email Not Sending
-Verify Email credentials in backend/.env
-Check if App Password is correct
-📚 Documentation
-START_HERE.md - Detailed quick start guide
-SECURE_CREDENTIALS.txt - Backup of credentials (keep secure!)
-📄 License
-This project is for educational purposes.
+    │   ├── components/ # Atomic UI & Shared components (Framer Motion)
+    │   ├── context/    # Global Auth State Management
+    │   ├── pages/      # Views (Dashboards, Search, Profile, Auth)
+    │   └── assets/     # Static resources
+```
 
-👨💻 Development
-For development with auto-reload:
+---
 
-# Backend
-cd backend
-npm run dev  # Uses nodemon
+## 📝 API Endpoints
 
-# Frontend
-cd frontend
-npm run dev  # Vite dev server
-Happy coding! 🚀
+### 🔑 Authentication
+- `POST /api/auth/register` - New user registration
+- `POST /api/auth/login` - Standard login
+- `POST /api/auth/google-login` - Google OAuth authentication
+- `POST /api/auth/verify-otp` - Email OTP verification
+
+### 👨‍⚕️ Doctors
+- `GET /api/doctor/all` - Fetch all doctors
+- `GET /api/doctor/:doctorId` - Detailed doctor profile
+- `GET /api/doctor/profile` - Current doctor's own profile (Protected)
+- `GET /api/doctor/similar/:doctorId` - Find related medical professionals
+- `PUT /api/doctor/update` - Update doctor profile (Protected)
+
+### 💬 Reviews
+- `GET /api/review/reviews/:doctorId` - Get all reviews for a specific doctor
+- `POST /api/review/add` - Submit a new review
+- `POST /api/review/reply/add` - Doctor reply to a review
+- `DELETE /api/review/delete/:reviewId` - Remove user feedback
+
+---
+
+## 🔐 Security & Optimization
+- **Redis Caching**: Optimized query performance for frequently accessed data.
+- **Role-Based Access (RBAC)**: Strict permissions for `user` and `doctor` roles.
+- **Image Processing**: Multer and Cloudinary integration for secure image uploads.
+- **Error Handling**: Centralized global error middleware for consistent API responses.
+
+---
+
+## 👨‍💻 Development
+- **Backend Reloading**: Use `nodemon` for automatic server restarts.
+- **Frontend Speed**: Powered by **Vite** for near-instant HMR (Hot Module Replacement).
+- **Styling**: **Tailwind 4** for high-performance, utility-first design.
+
+---
+*Happy coding! 🚀*
