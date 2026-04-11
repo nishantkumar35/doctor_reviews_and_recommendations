@@ -207,7 +207,7 @@ const getDoctorReviews = async (req, res) => {
       "user",
       "name email",
     );
-    await redis.setEx(key, CACHE_TTL.PUBLIC_REVIEWS, JSON.stringify(reviews));
+    await redis.set(key, JSON.stringify(reviews), "EX", CACHE_TTL.PUBLIC_REVIEWS);
     res.json(reviews);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -227,10 +227,11 @@ const getMyReviews = async (req, res) => {
       "specialization",
     );
     console.log("FOUND REVIEWS:", reviews.length);
-    await redis.setEx(key, CACHE_TTL.MY_REVIEWS, JSON.stringify(reviews));
+    await redis.set(key, JSON.stringify(reviews), "EX", CACHE_TTL.MY_REVIEWS);
     res.json(reviews);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error("GetMyReviews Error:", e);
+    res.status(500).json({ error: "Failed to fetch your reviews", detail: e.message });
   }
 };
 
@@ -252,7 +253,7 @@ const getReviewsForDoctor = async (req, res) => {
       .populate("user", "name email")
       .populate("doctor", "specialization");
 
-    await redis.setEx(key, CACHE_TTL.DOCTOR_REVIEWS, JSON.stringify(reviews));
+    await redis.set(key, JSON.stringify(reviews), "EX", CACHE_TTL.DOCTOR_REVIEWS);
 
     res.json(reviews);
   } catch (e) {

@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Activity,
   FileText,
+  Filter,
 } from "lucide-react";
 import { aiAPI, doctorAPI } from "../services/api";
 import Button from "../components/ui/Button";
@@ -24,6 +25,11 @@ const SearchResults = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isSearch, setIsSearch] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    clinicAddress: "",
+    specialization: "",
+  });
 
   const q = searchParams.get("q");
 
@@ -75,6 +81,36 @@ const SearchResults = () => {
     }
   };
 
+  const handleFilter = async () => {
+    setLoading(true);
+    setError(null);
+    setSearchParams({}); // Clear AI search when doing filter search
+    try {
+      const activeFilters = {};
+      if (filters.clinicAddress) activeFilters.clinicAddress = filters.clinicAddress;
+      if (filters.specialization) activeFilters.specialization = filters.specialization;
+
+      const { data } = await doctorAPI.getFiltered(activeFilters);
+      setResults({ doctors: data });
+      setIsSearch(false);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "No doctors found matching filters."
+      );
+      setResults(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      clinicAddress: "",
+      specialization: "",
+    });
+    fetchAllDoctors();
+  };
+
   return (
     <div className="container mx-auto px-6 py-12 min-h-screen">
       <div className="max-w-3xl mx-auto mb-16">
@@ -100,6 +136,51 @@ const SearchResults = () => {
             {loading ? "Analyzing..." : "Analyze"}
           </Button>
         </form>
+
+        <div className="flex justify-end mt-4 mb-2">
+          <Button
+            variant="ghost"
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 text-slate-300 hover:text-white"
+            type="button"
+          >
+            <Filter size={18} />
+            {showFilters ? "Hide Filters" : "Show Filters"}
+          </Button>
+        </div>
+
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="glass p-6 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 mb-4">
+                <Input
+                  placeholder="Specialization"
+                  value={filters.specialization}
+                  onChange={(e) => setFilters({ ...filters, specialization: e.target.value })}
+                />
+                <Input
+                  placeholder="City or Clinic Address"
+                  value={filters.clinicAddress}
+                  onChange={(e) => setFilters({ ...filters, clinicAddress: e.target.value })}
+                  icon={MapPin}
+                />
+                <div className="flex justify-center mx-auto items-end gap-1 md:col-span-1 lg:col-span-1 lg:justify-center">
+                  <Button variant="outline" onClick={clearFilters} type="button">
+                    Clear
+                  </Button>
+                  <Button onClick={handleFilter} type="button">
+                    Apply Filters
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <AnimatePresence mode="wait">

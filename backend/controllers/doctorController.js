@@ -105,14 +105,16 @@ const getAllDoctors = async (req, res) => {
       }),
     );
 
-    await redis.setEx(
+    await redis.set(
       key,
-      CACHE_TTL.ALL_DOCTORS,
       JSON.stringify(doctorsWithStats),
+      "EX",
+      CACHE_TTL.ALL_DOCTORS
     );
     res.json(doctorsWithStats);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("GetAllDoctors Error:", err);
+    res.status(500).json({ error: "Failed to fetch doctors", detail: err.message });
   }
 };
 
@@ -155,7 +157,7 @@ const getSingleDoctor = async (req, res) => {
       reviewCount: stats.length > 0 ? stats[0].reviewCount : 0,
     };
 
-    await redis.setEx(key, CACHE_TTL.SINGLE_DOCTOR, JSON.stringify(doctorData));
+    await redis.set(key, JSON.stringify(doctorData), "EX", CACHE_TTL.SINGLE_DOCTOR);
     res.json(doctorData);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -184,7 +186,7 @@ const similarDoctors = async (req, res) => {
     })
       .populate("userId", "name image")
       .lean();
-    redis.setEx(key, CACHE_TTL.SIMILAR_DOCTORS, JSON.stringify(allDoctors));
+    await redis.set(key, JSON.stringify(allDoctors), "EX", CACHE_TTL.SIMILAR_DOCTORS);
     res.json(allDoctors);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -193,7 +195,7 @@ const similarDoctors = async (req, res) => {
 
 const addFilter = async (req, res) => {
   try {
-    const { clinicAddress, specialization, minPrice, maxPrice } = req.query;
+    const { clinicAddress, specialization } = req.query;
     let query = {};
     if (clinicAddress) {
       query.clinicAddress = { $regex: clinicAddress, $options: "i" };
@@ -201,24 +203,10 @@ const addFilter = async (req, res) => {
     if (specialization) {
       query.specialization = specialization;
     }
-    if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) {
-        query.price.$gte = Number(minPrice);
-      }
-      if (maxPrice) {
-        query.price.$lte = Number(maxPrice);
-      }
-    }
     const doctors = await Doctor.find(query).populate(
       "userId",
       "name email image",
     );
-    if (doctors.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No doctors found matching the criteria" });
-    }
     res.json(doctors);
   } catch (err) {
     res.status(500).json({ error: err.message });

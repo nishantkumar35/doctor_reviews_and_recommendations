@@ -22,7 +22,19 @@ app.use(
   }),
 );
 
-const redisClient = new redis(process.env.REDIS_URL);
+const redisClient = new redis(process.env.REDIS_URL, {
+  tls: {
+    rejectUnauthorized: false
+  }
+});
+
+redisClient.on("error", (err) => {
+  console.error("Redis Error:", err);
+});
+
+redisClient.on("connect", () => {
+  console.log("Redis Connected");
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
