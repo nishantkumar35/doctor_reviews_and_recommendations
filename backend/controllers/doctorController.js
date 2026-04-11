@@ -3,6 +3,18 @@ const User = require("../models/user.js");
 const Review = require("../models/review.js");
 const uploadToCloudinary = require("../utils/cloudinaryUpload");
 
+const CACHE_TTL = {
+  ALL_DOCTORS: 60 * 5, 
+  SINGLE_DOCTOR: 60 * 10, 
+  SIMILAR_DOCTORS: 60 * 5,
+};
+
+const cacheKeys = {
+  allDoctors: () => "doctors:all",
+  singleDoctor: (id) => `doctors:${id}`,
+  similarDoctors: (id) => `doctors:similar:${id}`,
+};
+
 const getMyDoctorProfile = async (req, res) => {
   try {
     const doctor = await Doctor.findOne({ userId: req.user._id });
@@ -46,7 +58,10 @@ const updateDoctorProfile = async (req, res) => {
     doctor.clinicAddress = clinicAddress || doctor.clinicAddress;
 
     await doctor.save();
-
+    const redis = req.redisClient;
+    await redis.del(cacheKeys.allDoctors());
+    await redis.del(cacheKeys.singleDoctor(doctor._id));
+    await redis.del(cacheKeys.similarDoctors(doctor._id));
     res.json({
       message: "Doctor profile updated successfully",
       doctor,
@@ -57,28 +72,44 @@ const updateDoctorProfile = async (req, res) => {
 };
 
 const getAllDoctors = async (req, res) => {
+  const redis = req.redisClient;
+  const key = cacheKeys.allDoctors();
   try {
-    const doctors = await Doctor.find().populate("userId", "name email image");
-    
-    // Add rating stats to each doctor
-    const doctorsWithStats = await Promise.all(doctors.map(async (doc) => {
-       const stats = await Review.aggregate([
-         { $match: { doctor: doc._id } },
-         { $group: { 
-             _id: "$doctor", 
-             averageRating: { $avg: "$rating" },
-             reviewCount: { $sum: 1 }
-           } 
-         }
-       ]);
-       
-       return {
-         ...doc.toObject(),
-         averageRating: stats.length > 0 ? Number(stats[0].averageRating.toFixed(1)) : 0,
-         reviewCount: stats.length > 0 ? stats[0].reviewCount : 0
-       };
-    }));
+    const cached = await redis.get(key);
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
 
+    const doctors = await Doctor.find().populate("userId", "name email image");
+
+    // Add rating stats to each doctor
+    const doctorsWithStats = await Promise.all(
+      doctors.map(async (doc) => {
+        const stats = await Review.aggregate([
+          { $match: { doctor: doc._id } },
+          {
+            $group: {
+              _id: "$doctor",
+              averageRating: { $avg: "$rating" },
+              reviewCount: { $sum: 1 },
+            },
+          },
+        ]);
+
+        return {
+          ...doc.toObject(),
+          averageRating:
+            stats.length > 0 ? Number(stats[0].averageRating.toFixed(1)) : 0,
+          reviewCount: stats.length > 0 ? stats[0].reviewCount : 0,
+        };
+      }),
+    );
+
+    await redis.setEx(
+      key,
+      CACHE_TTL.ALL_DOCTORS,
+      JSON.stringify(doctorsWithStats),
+    );
     res.json(doctorsWithStats);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -86,12 +117,19 @@ const getAllDoctors = async (req, res) => {
 };
 
 const getSingleDoctor = async (req, res) => {
+  const redis = req.redisClient;
+  const key = cacheKeys.singleDoctor(req.params.doctorId);
   try {
     const { doctorId } = req.params;
+    const cached = await redis.get(key);
+
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
 
     const doctor = await Doctor.findById(doctorId).populate(
       "userId",
-      "name email image"
+      "name email image",
     );
 
     if (!doctor) {
@@ -101,20 +139,23 @@ const getSingleDoctor = async (req, res) => {
     // Add rating stats
     const stats = await Review.aggregate([
       { $match: { doctor: doctor._id } },
-      { $group: { 
-          _id: "$doctor", 
+      {
+        $group: {
+          _id: "$doctor",
           averageRating: { $avg: "$rating" },
-          reviewCount: { $sum: 1 }
-        } 
-      }
+          reviewCount: { $sum: 1 },
+        },
+      },
     ]);
 
     const doctorData = {
       ...doctor.toObject(),
-      averageRating: stats.length > 0 ? Number(stats[0].averageRating.toFixed(1)) : 0,
-      reviewCount: stats.length > 0 ? stats[0].reviewCount : 0
+      averageRating:
+        stats.length > 0 ? Number(stats[0].averageRating.toFixed(1)) : 0,
+      reviewCount: stats.length > 0 ? stats[0].reviewCount : 0,
     };
 
+    await redis.setEx(key, CACHE_TTL.SINGLE_DOCTOR, JSON.stringify(doctorData));
     res.json(doctorData);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -122,8 +163,15 @@ const getSingleDoctor = async (req, res) => {
 };
 
 const similarDoctors = async (req, res) => {
+  const redis = req.redisClient;
+  const key = cacheKeys.similarDoctors(req.params.doctorId);
+
   try {
     const { doctorId } = req.params;
+    const cached = await redis.get(key);
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
 
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
@@ -136,42 +184,46 @@ const similarDoctors = async (req, res) => {
     })
       .populate("userId", "name image")
       .lean();
-
+    redis.setEx(key, CACHE_TTL.SIMILAR_DOCTORS, JSON.stringify(allDoctors));
     res.json(allDoctors);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-const addFilter = async (req,res)=>{
-  try{
+const addFilter = async (req, res) => {
+  try {
     const { clinicAddress, specialization, minPrice, maxPrice } = req.query;
     let query = {};
-    if(clinicAddress){
+    if (clinicAddress) {
       query.clinicAddress = { $regex: clinicAddress, $options: "i" };
     }
-    if(specialization){
+    if (specialization) {
       query.specialization = specialization;
     }
-    if(minPrice || maxPrice){
+    if (minPrice || maxPrice) {
       query.price = {};
-      if(minPrice){
+      if (minPrice) {
         query.price.$gte = Number(minPrice);
       }
-      if(maxPrice){
+      if (maxPrice) {
         query.price.$lte = Number(maxPrice);
       }
     }
-    const doctors = await Doctor.find(query).populate("userId", "name email image");
-    if(doctors.length === 0){
-      return res.status(404).json({ message: "No doctors found matching the criteria" });
+    const doctors = await Doctor.find(query).populate(
+      "userId",
+      "name email image",
+    );
+    if (doctors.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No doctors found matching the criteria" });
     }
     res.json(doctors);
-  }
-  catch (err) {
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}
+};
 
 module.exports = {
   getMyDoctorProfile,
@@ -179,5 +231,5 @@ module.exports = {
   getAllDoctors,
   getSingleDoctor,
   similarDoctors,
-  addFilter
+  addFilter,
 };

@@ -35,16 +35,8 @@ connectDB()
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.error("DB Error:", err));
 
-
 // Routes
-app.use(
-  "/api/auth",
-  (req, res, next) => {
-    req.redisClient = redisClient;
-    next();
-  },
-  authRoute,
-);
+app.use("/api/auth", authRoute);
 
 app.use(
   "/api/doctor",
@@ -64,23 +56,9 @@ app.use(
   reviewRoute,
 );
 
-app.use(
-  "/api/user",
-  (req, res, next) => {
-    req.redisClient = redisClient;
-    next();
-  },
-  userRoute,
-);
+app.use("/api/user", userRoute);
 
-app.use(
-  "/api/ai",
-  (req, res, next) => {
-    req.redisClient = redisClient;
-    next();
-  },
-  aiRoute,
-);
+app.use("/api/ai", aiRoute);
 
 // Global Error handling middleware
 app.use((err, req, res, next) => {
