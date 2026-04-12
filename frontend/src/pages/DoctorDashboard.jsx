@@ -216,7 +216,7 @@ const DoctorDashboard = () => {
   const fetchDoctorReviews = async () => {
     try {
       const { data } = await reviewAPI.getDoctorReviews();
-      setReviews(data);
+      setReviews(data.reviews);
     } catch (err) {
       console.error(err);
     }

@@ -5,10 +5,10 @@ const doctorSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-    specialization: String,
-    summary:String,
+    specialization: { type: String, index: true },
+    summary: String,
     experience: Number,
-    clinicAddress: String,
+    clinicAddress: { type: String, index: true },
 
 },{timestamps : true});
 

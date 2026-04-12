@@ -13,7 +13,7 @@ const getMyUserProfile = async (req, res) => {
 
     res.json(user);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -42,7 +42,7 @@ const applyDoctor = async (req, res) => {
       doctor,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 

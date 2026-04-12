@@ -31,12 +31,14 @@ const reviewSchema = new mongoose.Schema({
     doctor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Doctor",
-        required: true
+        required: true,
+        index: true
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
+        index: true
     },
     rating: {
         type: Number,

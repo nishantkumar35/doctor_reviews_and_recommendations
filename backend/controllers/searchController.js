@@ -51,7 +51,7 @@ const aiSearch = async (req, res) => {
     });
   } catch (e) {
     console.log(e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 

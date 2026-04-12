@@ -9,10 +9,12 @@ const {
   getSingleDoctor,
   updateDoctorProfile,
   similarDoctors,
-  addFilter
+  addFilter,
+  getFilterOptions
 } = require('../controllers/doctorController');
 
 router.get('/all', getAllDoctors);
+router.get('/options', getFilterOptions);
 router.get('/filter', addFilter);
 router.get('/profile', protect, allowRole("doctor"), getMyDoctorProfile);
 

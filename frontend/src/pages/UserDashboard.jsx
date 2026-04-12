@@ -21,7 +21,7 @@ const UserDashboard = () => {
     try {
       setLoading(true);
       const { data } = await reviewAPI.getUserReviews();
-      setReviews(data);
+      setReviews(data.reviews);
     } catch (err) {
       console.error("Fetch review error:", err);
     } finally {

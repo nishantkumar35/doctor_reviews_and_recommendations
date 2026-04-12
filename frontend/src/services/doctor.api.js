@@ -7,4 +7,5 @@ export const doctorAPI = {
   getFiltered: (params) => api.get('/doctor/filter', { params }),
   getSingle: (id) => api.get(`/doctor/${id}`),
   getSimilarDoctors: (id) => api.get(`/doctor/similar/${id}`),
+  getFilterOptions: () => api.get('/doctor/options'),
 };

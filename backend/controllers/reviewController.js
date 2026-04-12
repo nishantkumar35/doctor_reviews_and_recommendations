@@ -38,7 +38,7 @@ const addReview = async (req, res) => {
 
     res.json({ message: "Review added successfully", review });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -66,7 +66,7 @@ const editReview = async (req, res) => {
 
     res.json({ message: "Review updated", review });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -93,7 +93,7 @@ const deleteReview = async (req, res) => {
 
     res.json({ message: "Review deleted successfully" });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -123,7 +123,7 @@ const addReply = async (req, res) => {
 
     res.json({ message: "Reply added", review });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -153,7 +153,7 @@ const editReply = async (req, res) => {
     ]);
     res.json({ message: "Reply updated", review });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -185,7 +185,7 @@ const deleteReply = async (req, res) => {
     ]);
     res.json({ message: "Reply deleted" });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -200,17 +200,19 @@ const getDoctorReviews = async (req, res) => {
     const key = cacheKeys.doctorOwnReviews(doctor._id.toString());
     const cached = await redis.get(key);
     if (cached) {
-      return res.json(JSON.parse(cached));
+      const data = JSON.parse(cached);
+      return res.json(Array.isArray(data) ? { reviews: data } : data);
     }
 
     const reviews = await Review.find({ doctor: doctor._id }).populate(
       "user",
       "name email",
     );
-    await redis.set(key, JSON.stringify(reviews), "EX", CACHE_TTL.PUBLIC_REVIEWS);
-    res.json(reviews);
+    const response = { reviews };
+    await redis.set(key, JSON.stringify(response), "EX", CACHE_TTL.PUBLIC_REVIEWS);
+    res.json(response);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -220,18 +222,20 @@ const getMyReviews = async (req, res) => {
     const key = cacheKeys.myReviews(req.user._id.toString());
     const cached = await redis.get(key);
     if (cached) {
-      return res.json(JSON.parse(cached));
+      const data = JSON.parse(cached);
+      return res.json(Array.isArray(data) ? { reviews: data } : data);
     }
     const reviews = await Review.find({ user: req.user._id }).populate(
       "doctor",
       "specialization",
     );
     console.log("FOUND REVIEWS:", reviews.length);
-    await redis.set(key, JSON.stringify(reviews), "EX", CACHE_TTL.MY_REVIEWS);
-    res.json(reviews);
+    const response = { reviews };
+    await redis.set(key, JSON.stringify(response), "EX", CACHE_TTL.MY_REVIEWS);
+    res.json(response);
   } catch (e) {
     console.error("GetMyReviews Error:", e);
-    res.status(500).json({ error: "Failed to fetch your reviews", detail: e.message });
+    res.status(500).json({ message: "Failed to fetch your reviews", detail: e.message });
   }
 };
 
@@ -246,18 +250,20 @@ const getReviewsForDoctor = async (req, res) => {
     const key = cacheKeys.reviewsForDoctor(doctorId);
     const cached = await redis.get(key);
     if (cached) {
-      return res.json(JSON.parse(cached));
+      const data = JSON.parse(cached);
+      return res.json(Array.isArray(data) ? { reviews: data } : data);
     }
 
     const reviews = await Review.find({ doctor: doctorId })
       .populate("user", "name email")
       .populate("doctor", "specialization");
 
-    await redis.set(key, JSON.stringify(reviews), "EX", CACHE_TTL.DOCTOR_REVIEWS);
+    const response = { reviews };
+    await redis.set(key, JSON.stringify(response), "EX", CACHE_TTL.DOCTOR_REVIEWS);
 
-    res.json(reviews);
+    res.json(response);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 

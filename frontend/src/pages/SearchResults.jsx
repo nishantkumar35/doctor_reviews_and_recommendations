@@ -13,6 +13,8 @@ import {
   Activity,
   FileText,
   Filter,
+  Award,
+  CircleDot
 } from "lucide-react";
 import { aiAPI, doctorAPI } from "../services/api";
 import Button from "../components/ui/Button";
@@ -29,7 +31,10 @@ const SearchResults = () => {
   const [filters, setFilters] = useState({
     clinicAddress: "",
     specialization: "",
+    minExperience: "",
+    minRating: "",
   });
+  const [specializationOptions, setSpecializationOptions] = useState([]);
 
   const q = searchParams.get("q");
 
@@ -41,14 +46,26 @@ const SearchResults = () => {
       setIsSearch(false);
       fetchAllDoctors();
     }
-  }, [q]); 
+  }, [q]);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const { data } = await doctorAPI.getFilterOptions();
+        setSpecializationOptions(data.specializations || []);
+      } catch (err) {
+        console.error("Failed to fetch specializations");
+      }
+    };
+    fetchOptions();
+  }, []);
 
   const fetchAllDoctors = async () => {
     setLoading(true);
     setError(null);
     try {
       const { data } = await doctorAPI.getAll();
-      setResults({ doctors: data });
+      setResults(data);
     } catch (err) {
       setError("Failed to load doctors.");
     } finally {
@@ -84,14 +101,17 @@ const SearchResults = () => {
   const handleFilter = async () => {
     setLoading(true);
     setError(null);
-    setSearchParams({}); // Clear AI search when doing filter search
+    setSearchParams({}); 
     try {
       const activeFilters = {};
       if (filters.clinicAddress) activeFilters.clinicAddress = filters.clinicAddress;
-      if (filters.specialization) activeFilters.specialization = filters.specialization;
+      if (filters.specialization && filters.specialization !== "All") 
+        activeFilters.specialization = filters.specialization;
+      if (filters.minExperience) activeFilters.minExperience = filters.minExperience;
+      if (filters.minRating) activeFilters.minRating = filters.minRating;
 
       const { data } = await doctorAPI.getFiltered(activeFilters);
-      setResults({ doctors: data });
+      setResults(data);
       setIsSearch(false);
     } catch (err) {
       setError(
@@ -107,6 +127,8 @@ const SearchResults = () => {
     setFilters({
       clinicAddress: "",
       specialization: "",
+      minExperience: "",
+      minRating: "",
     });
     fetchAllDoctors();
   };
@@ -157,24 +179,80 @@ const SearchResults = () => {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="glass p-6 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 mb-4">
-                <Input
-                  placeholder="Specialization"
-                  value={filters.specialization}
-                  onChange={(e) => setFilters({ ...filters, specialization: e.target.value })}
-                />
-                <Input
-                  placeholder="City or Clinic Address"
-                  value={filters.clinicAddress}
-                  onChange={(e) => setFilters({ ...filters, clinicAddress: e.target.value })}
-                  icon={MapPin}
-                />
-                <div className="flex justify-center mx-auto items-end gap-1 md:col-span-1 lg:col-span-1 lg:justify-center">
-                  <Button variant="outline" onClick={clearFilters} type="button">
-                    Clear
+              <div className="glass p-8 rounded-3xl mt-2 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Specialization Dropdown */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Specialization</label>
+                    <div className="relative">
+                      <select
+                        value={filters.specialization}
+                        onChange={(e) => setFilters({ ...filters, specialization: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+                      >
+                        <option value="" className="bg-slate-900">All Specializations</option>
+                        {specializationOptions.map(opt => (
+                          <option key={opt} value={opt} className="bg-slate-900">{opt}</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <Filter size={14} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* City Input */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">City / Location</label>
+                    <Input
+                      placeholder="e.g. New York"
+                      value={filters.clinicAddress}
+                      onChange={(e) => setFilters({ ...filters, clinicAddress: e.target.value })}
+                      icon={MapPin}
+                      className="!h-11"
+                    />
+                  </div>
+
+                  {/* Experience Input */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Min Experience (Years)</label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={filters.minExperience}
+                      onChange={(e) => setFilters({ ...filters, minExperience: e.target.value })}
+                      icon={Award}
+                      className="!h-11"
+                    />
+                  </div>
+
+                  {/* Rating Dropdown */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Minimum Rating</label>
+                    <div className="relative">
+                      <select
+                        value={filters.minRating}
+                        onChange={(e) => setFilters({ ...filters, minRating: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+                      >
+                        <option value="" className="bg-slate-900">Any Rating</option>
+                        {[5, 4, 3, 2, 1].map(num => (
+                          <option key={num} value={num} className="bg-slate-900">{num}+ Stars</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300">
+                        <Star size={14} fill="currentColor" className="text-yellow-500" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-center gap-4 mt-8 pt-6 border-t border-white/5">
+                  <Button variant="outline" onClick={clearFilters} type="button" className="px-8">
+                    Reset
                   </Button>
-                  <Button onClick={handleFilter} type="button">
-                    Apply Filters
+                  <Button onClick={handleFilter} type="button" className="px-8 bg-primary hover:bg-primary/80">
+                    Apply Results
                   </Button>
                 </div>
               </div>

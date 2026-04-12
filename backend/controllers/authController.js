@@ -39,7 +39,7 @@ const register = async (req, res) => {
 
     res.json({ message: "Registered successfully" });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -82,7 +82,7 @@ const login = async (req, res) => {
       user: safeUser,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -114,7 +114,7 @@ const verifyOTP = async (req, res) => {
       user: safeUser,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -156,7 +156,7 @@ const googleLogin = async (req, res) => {
       user: safeUser,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 };
 

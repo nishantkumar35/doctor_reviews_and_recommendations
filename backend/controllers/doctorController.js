@@ -4,8 +4,8 @@ const Review = require("../models/review.js");
 const uploadToCloudinary = require("../utils/cloudinaryUpload");
 
 const CACHE_TTL = {
-  ALL_DOCTORS: 60 * 5, 
-  SINGLE_DOCTOR: 60 * 10, 
+  ALL_DOCTORS: 60 * 5,
+  SINGLE_DOCTOR: 60 * 10,
   SIMILAR_DOCTORS: 60 * 5,
 };
 
@@ -27,7 +27,7 @@ const getMyDoctorProfile = async (req, res) => {
 
     res.json(doctor);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -67,7 +67,7 @@ const updateDoctorProfile = async (req, res) => {
       doctor,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -77,7 +77,9 @@ const getAllDoctors = async (req, res) => {
   try {
     const cached = await redis.get(key);
     if (cached) {
-      return res.json(JSON.parse(cached));
+      const data = JSON.parse(cached);
+      // Handle legacy cache format (array) if it exists, otherwise return as is
+      return res.json(Array.isArray(data) ? { doctors: data } : data);
     }
 
     const doctors = await Doctor.find().populate("userId", "name email image");
@@ -105,16 +107,19 @@ const getAllDoctors = async (req, res) => {
       }),
     );
 
+    const response = { doctors: doctorsWithStats };
     await redis.set(
       key,
-      JSON.stringify(doctorsWithStats),
+      JSON.stringify(response),
       "EX",
-      CACHE_TTL.ALL_DOCTORS
+      CACHE_TTL.ALL_DOCTORS,
     );
-    res.json(doctorsWithStats);
+    res.json(response);
   } catch (err) {
     console.error("GetAllDoctors Error:", err);
-    res.status(500).json({ error: "Failed to fetch doctors", detail: err.message });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch doctors", detail: err.message });
   }
 };
 
@@ -157,10 +162,15 @@ const getSingleDoctor = async (req, res) => {
       reviewCount: stats.length > 0 ? stats[0].reviewCount : 0,
     };
 
-    await redis.set(key, JSON.stringify(doctorData), "EX", CACHE_TTL.SINGLE_DOCTOR);
+    await redis.set(
+      key,
+      JSON.stringify(doctorData),
+      "EX",
+      CACHE_TTL.SINGLE_DOCTOR,
+    );
     res.json(doctorData);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -172,7 +182,9 @@ const similarDoctors = async (req, res) => {
     const { doctorId } = req.params;
     const cached = await redis.get(key);
     if (cached) {
-      return res.json(JSON.parse(cached));
+      const data = JSON.parse(cached);
+      // Handle legacy cache format (array) if it exists, otherwise return as is
+      return res.json(Array.isArray(data) ? { doctors: data } : data);
     }
 
     const doctor = await Doctor.findById(doctorId);
@@ -186,30 +198,107 @@ const similarDoctors = async (req, res) => {
     })
       .populate("userId", "name image")
       .lean();
-    await redis.set(key, JSON.stringify(allDoctors), "EX", CACHE_TTL.SIMILAR_DOCTORS);
-    res.json(allDoctors);
+    const response = { doctors: allDoctors };
+    await redis.set(
+      key,
+      JSON.stringify(response),
+      "EX",
+      CACHE_TTL.SIMILAR_DOCTORS,
+    );
+    res.json(response);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getFilterOptions = async (req, res) => {
+  try {
+    const specializations = await Doctor.distinct("specialization");
+
+    res.json({
+      specializations,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
 const addFilter = async (req, res) => {
   try {
-    const { clinicAddress, specialization } = req.query;
-    let query = {};
+    const { clinicAddress, specialization, minExperience, minRating } = req.query;
+
+    let matchQuery = {};
+
     if (clinicAddress) {
-      query.clinicAddress = { $regex: clinicAddress, $options: "i" };
+      // Look for city in clinicAddress
+      matchQuery.clinicAddress = { $regex: clinicAddress, $options: "i" };
     }
-    if (specialization) {
-      query.specialization = specialization;
+
+    if (specialization && specialization !== "All") {
+      matchQuery.specialization = specialization;
     }
-    const doctors = await Doctor.find(query).populate(
-      "userId",
-      "name email image",
+
+    if (minExperience) {
+      matchQuery.experience = { $gte: Number(minExperience) };
+    }
+
+    const pipeline = [
+      { $match: matchQuery },
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "doctor",
+          as: "reviews",
+        },
+      },
+      {
+        $addFields: {
+          averageRating: { $ifNull: [{ $avg: "$reviews.rating" }, 0] },
+          reviewCount: { $size: "$reviews" },
+        },
+      },
+    ];
+
+    if (minRating) {
+      pipeline.push({
+        $match: { averageRating: { $gte: Number(minRating) } },
+      });
+    }
+
+    // Join with User info to get name, email, image
+    pipeline.push(
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      { $unwind: "$userDetails" },
+      {
+        $project: {
+          reviews: 0,
+          "userDetails.password": 0,
+          "userDetails.otpCode": 0,
+          "userDetails.otpExpiry": 0,
+        },
+      }
     );
-    res.json(doctors);
+
+    const rawDoctors = await Doctor.aggregate(pipeline);
+    
+    // Transform to maintain frontend compatibility (userId property should contain user object)
+    const doctors = rawDoctors.map(doc => ({
+      ...doc,
+      userId: doc.userDetails,
+      userDetails: undefined
+    }));
+
+    res.json({ doctors });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -219,5 +308,6 @@ module.exports = {
   getAllDoctors,
   getSingleDoctor,
   similarDoctors,
+  getFilterOptions,
   addFilter,
 };

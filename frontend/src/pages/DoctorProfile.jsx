@@ -28,8 +28,8 @@ const DoctorProfile = () => {
       const { data: reviewData } = await reviewAPI.getForDoctor(id);
       const { data: similarDoctorsData } = await doctorAPI.getSimilarDoctors(id);
       setDoctor(doctorData);
-      setReviews(reviewData);
-      setSimilarDoctors(similarDoctorsData);
+      setReviews(reviewData.reviews);
+      setSimilarDoctors(similarDoctorsData.doctors);
     } catch (err) {
       console.log(err.response?.data);
       console.error(err);
