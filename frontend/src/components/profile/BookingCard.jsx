@@ -8,37 +8,44 @@ const BookingCard = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass p-8 rounded-[2rem] sticky top-28"
+      className="bg-white border border-blue-100 rounded-2xl p-7 sticky top-28"
     >
-      <h3 className="text-xl font-bold text-white mb-6">Consultation</h3>
+      <h3 className="text-base font-bold text-slate-900 mb-5">
+        Consultation
+      </h3>
 
-      <div className="space-y-6 mb-8">
-        <div className="flex justify-between items-center text-slate-400">
-          <span className="flex items-center gap-2">
-            <Calendar size={18} className="text-primary" /> Availability
+      {/* Info rows */}
+      <div className="divide-y divide-slate-100">
+        <div className="flex justify-between items-center py-3.5">
+          <span className="flex items-center gap-2 text-sm text-slate-500">
+            <Calendar size={15} className="text-blue-500" strokeWidth={2} />
+            Availability
           </span>
-          <span className="text-white font-medium">Mon - Sat</span>
+          <span className="text-sm font-semibold text-slate-900">Mon – Sat</span>
         </div>
-        <div className="flex justify-between items-center text-slate-400">
-          <span className="flex items-center gap-2">
-            <Clock size={18} className="text-primary" /> Hours
+        <div className="flex justify-between items-center py-3.5">
+          <span className="flex items-center gap-2 text-sm text-slate-500">
+            <Clock size={15} className="text-blue-500" strokeWidth={2} />
+            Hours
           </span>
-          <span className="text-white font-medium">10:00 - 18:00</span>
+          <span className="text-sm font-semibold text-slate-900">10:00 – 18:00</span>
         </div>
       </div>
 
-      <Button className="w-full py-4 rounded-2xl mb-4 text-lg">
-        Book Appointment
-      </Button>
-      <Button
-        variant="outline"
-        className="w-full py-4 rounded-2xl border-white/5"
-      >
-        Send Message
-      </Button>
+      <div className="mt-6 space-y-2.5">
+        <Button className="w-full py-3 rounded-xl">
+          Book appointment
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full py-3 rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50"
+        >
+          Send message
+        </Button>
+      </div>
 
-      <p className="text-center text-[10px] text-slate-600 mt-6 px-4">
-        * Consultation fees may vary based on specialist and treatment.
+      <p className="text-center text-[11px] text-slate-400 mt-5 leading-relaxed px-2">
+        Consultation fees may vary based on specialist and treatment.
       </p>
     </motion.div>
   );

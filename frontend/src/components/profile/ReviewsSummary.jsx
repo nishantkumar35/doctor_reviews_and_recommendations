@@ -16,49 +16,52 @@ const ReviewsSummary = ({ doctor, reviews, user, onReviewSubmit }) => {
   };
 
   return (
-    <div className="glass p-8 rounded-3xl space-y-8">
-      {/* ⭐ Rating Overview */}
-      <div>
-        <h3 className="text-lg font-bold text-white mb-4 uppercase tracking-wider opacity-80">
-          Rating
-        </h3>
+    <div className="bg-white border border-blue-100 rounded-2xl p-6 space-y-6">
 
-        <div className="flex items-center gap-4 bg-white/5 py-4 px-5 rounded-2xl mb-6">
-          <div className="flex gap-1 text-yellow-500">
+      {/* Rating overview */}
+      <div>
+        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+          Rating overview
+        </p>
+
+        {/* Average score row */}
+        <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 mb-5">
+          <div className="flex gap-0.5">
             {[1, 2, 3, 4, 5].map((star) => (
               <Star
                 key={star}
-                size={20}
-                fill={
+                size={17}
+                className={
                   star <= Math.round(doctor.averageRating || 0)
-                    ? 'currentColor'
-                    : 'none'
+                    ? 'text-amber-400 fill-amber-400'
+                    : 'text-slate-200 fill-slate-200'
                 }
               />
             ))}
           </div>
-          <span className="text-slate-400 font-bold">
+          <span className="text-sm font-semibold text-slate-600">
             {doctor.averageRating || 0} out of 5
           </span>
         </div>
 
-        <div className="space-y-3">
+        {/* Bar breakdown */}
+        <div className="space-y-2.5">
           {[5, 4, 3, 2, 1].map((star) => {
             const count = reviews.filter((r) => r.rating === star).length;
             const percentage =
               reviews.length > 0 ? (count / reviews.length) * 100 : 0;
 
             return (
-              <div key={star} className="flex items-center gap-4">
-                <span className="text-xs font-bold text-slate-400 min-w-[45px]">
+              <div key={star} className="flex items-center gap-3">
+                <span className="text-[11px] font-semibold text-slate-400 min-w-[42px]">
                   {star} star
                 </span>
-
-                <div className="flex-1 h-2.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
-                    className="h-full bg-yellow-500 rounded-full"
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    className="h-full bg-amber-400 rounded-full"
                   />
                 </div>
               </div>
@@ -67,53 +70,57 @@ const ReviewsSummary = ({ doctor, reviews, user, onReviewSubmit }) => {
         </div>
       </div>
 
-      {/* Divider */}
-      {user && <div className="border-t border-white/10" />}
-
-      {/* ⭐ Add Review */}
+      {/* Leave a review */}
       {user && (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-slate-400">
-              Your Rating:
-            </span>
+        <>
+          <div className="border-t border-slate-100" />
 
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => setNewReview({ ...newReview, rating: num })}
-                  className={
-                    num <= newReview.rating
-                      ? 'text-yellow-500'
-                      : 'text-slate-600'
-                  }
-                >
-                  <Star
-                    size={22}
-                    className={num <= newReview.rating ? 'fill-yellow-500' : ''}
-                  />
-                </button>
-              ))}
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-slate-500">
+                Your rating
+              </span>
+              <div className="flex gap-0.5">
+                {[1, 2, 3, 4, 5].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setNewReview({ ...newReview, rating: num })}
+                    className="p-0.5 transition-transform hover:scale-110"
+                  >
+                    <Star
+                      size={20}
+                      className={
+                        num <= newReview.rating
+                          ? 'text-amber-400 fill-amber-400'
+                          : 'text-slate-300 fill-slate-300'
+                      }
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="flex gap-3">
-            <Input
-              placeholder="Share your experience..."
-              value={newReview.comment}
-              onChange={(e) =>
-                setNewReview({ ...newReview, comment: e.target.value })
-              }
-              className="!bg-white/5 w-full p-2"
-            />
-
-            <Button type="submit" disabled={!newReview.comment.trim()}>
-              <Send size={18} />
-            </Button>
-          </div>
-        </form>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Share your experience..."
+                value={newReview.comment}
+                onChange={(e) =>
+                  setNewReview({ ...newReview, comment: e.target.value })
+                }
+                className="w-full"
+              />
+              <Button
+                type="submit"
+                size="md"
+                disabled={!newReview.comment.trim()}
+                className="flex-shrink-0 px-3.5"
+              >
+                <Send size={15} />
+              </Button>
+            </div>
+          </form>
+        </>
       )}
     </div>
   );

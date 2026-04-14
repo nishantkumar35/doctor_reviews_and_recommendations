@@ -1,122 +1,89 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Stethoscope, Search, LayoutDashboard, User, LogOut, HomeIcon } from "lucide-react";
+import { Search, LayoutDashboard, User, LogOut, HomeIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
-
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-3">
-      <div className="flex items-center gap-3 px-5 py-3 rounded-full bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
+    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+      <div className="flex items-center gap-0.5 px-3 py-2 rounded-full bg-white border border-blue-100 shadow-[0_4px_20px_rgba(59,130,246,0.12)]">
 
-        {/* Home */}
-        <DockItem
-          icon={HomeIcon}
-          label="Home"
-          to="/"
-          active={isActive("/")}
-        />
-
-        {/* Find Doctors */}
-        <DockItem
-          icon={Search}
-          label="Find Doctors"
-          to="/search"
-          active={isActive("/search")}
-        />
+        <DockItem icon={HomeIcon} label="Home"         to="/"       active={isActive("/")} />
+        <DockItem icon={Search}   label="Find doctors" to="/search" active={isActive("/search")} />
 
         {user ? (
           <>
-            {/* Doctor Dashboard */}
             {user.role === "doctor" && (
-              <DockItem
-                icon={LayoutDashboard}
-                label="Dashboard"
-                to="/dashboard"
-                active={isActive("/dashboard")}
-              />
+              <DockItem icon={LayoutDashboard} label="Dashboard" to="/dashboard" active={isActive("/dashboard")} />
             )}
+            <DockItem icon={User} label="Profile" to="/profile" active={isActive("/profile")} />
 
-            {/* Profile */}
-            <DockItem
-              icon={User}
-              label="Profile"
-              to="/profile"
-              active={isActive("/profile")}
-            />
+            {/* Separator */}
+            <div className="w-px h-5 bg-blue-100 mx-2" />
 
             {/* Logout */}
             <button
               onClick={logout}
-              className="relative group flex flex-col items-center"
-              aria-label="Logout"
+              aria-label="Log out"
+              className="
+                group relative flex items-center justify-center
+                w-11 h-11 rounded-full
+                text-slate-400 hover:text-red-500 hover:bg-red-50
+                transition-all duration-150
+              "
             >
-              {/* Tooltip */}
-              <span className="pointer-events-none absolute -top-14 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-200">
-                <span className="whitespace-nowrap text-xs font-medium text-white px-4 py-2 rounded-md bg-white/10 border border-white/15 shadow-xl">
-                  Logout
-                </span>
-              </span>
-
-              {/* Icon */}
-              <span className="relative z-10 p-3 rounded-full text-white transition-all duration-300 group-hover:-translate-y-1.5 group-hover:scale-110">
-                <LogOut size={22} />
-              </span>
+              <Tooltip label="Log out" />
+              <LogOut size={19} strokeWidth={2} />
             </button>
           </>
         ) : (
-          <>
-            {/* Login */}
-            <DockItem
-              icon={User}
-              label="Login"
-              to="/login"
-              active={isActive("/login")}
-            />
-          </>
+          <DockItem icon={User} label="Login" to="/login" active={isActive("/login")} />
         )}
+
       </div>
     </nav>
   );
 };
+
+function Tooltip({ label }) {
+  return (
+    <span className="
+      pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2
+      opacity-0 group-hover:opacity-100 transition-opacity duration-150
+      text-[11px] font-medium text-white whitespace-nowrap
+      px-2.5 py-1 rounded-md bg-slate-800
+    ">
+      {label}
+    </span>
+  );
+}
 
 function DockItem({ icon: Icon, label, to, active }) {
   return (
     <Link
       to={to}
       aria-label={label}
-      className="relative group flex flex-col items-center"
+      className={`
+        group relative flex items-center justify-center
+        w-11 h-11 rounded-full transition-all duration-150
+        ${active
+          ? "text-blue-600 bg-blue-50"
+          : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+        }
+      `}
     >
-      {/* Tooltip */}
-      <span className="pointer-events-none absolute -top-14 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-200">
-        <span className="whitespace-nowrap text-xs font-medium text-white px-4 py-2 rounded-md bg-white/10 border border-white/15 shadow-xl">
-          {label}
-        </span>
-      </span>
+      <Tooltip label={label} />
 
-      {/* Glow */}
-      <span
-        className={`absolute inset-0 rounded-md transition-all duration-300 ${
-          active
-            ? "opacity-100 bg-white/15"
-            : "opacity-0 group-hover:opacity-100 bg-white/20"
-        }`}
-      >
-        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-tl-2xl rounded-tr-2xl bg-primary" />
-      </span>
+      {/* Active dot */}
+      {active && (
+        <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-500" />
+      )}
 
-      {/* Icon */}
-      <span
-        className={`relative z-10 p-3 rounded-full text-white transition-all duration-300 group-hover:-translate-y-1.5 group-hover:scale-110 ${
-          active ? "-translate-y-1.5 scale-110" : ""
-        }`}
-      >
-        <Icon size={22} />
-      </span>
+      <Icon size={19} strokeWidth={2} />
     </Link>
   );
 }

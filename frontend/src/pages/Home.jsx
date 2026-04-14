@@ -17,27 +17,33 @@ const Home = () => {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.2 }
-    }
+      transition: { staggerChildren: 0.15 },
+    },
   };
 
   return (
-    <div className="relative isolate pt-14">
-      {/* Background blobs */}
-      <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
-        <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#0ea5e9] to-[#6366f1] opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"></div>
-      </div>
+    <div className="relative isolate min-h-screen bg-[#f8faff] pt-14 overflow-hidden">
 
-      <div className="container mx-auto px-6 ">
-        <motion.div 
-          className="mx-auto max-w-4xl text-center"
+      {/* Subtle grid background */}
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(rgba(59,130,246,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.04)_1px,transparent_1px)] bg-[size:32px_32px]" />
+
+      {/* Top center glow */}
+      <div className="absolute -top-24 left-1/2 -translate-x-1/2 -z-10 w-[520px] h-[280px] bg-[radial-gradient(ellipse,rgba(59,130,246,0.09)_0%,transparent_70%)]" />
+
+      <div className="container mx-auto px-6">
+        <motion.div
+          className="mx-auto max-w-3xl text-center"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          <Hero problem={problem} setProblem={setProblem} handleSearch={handleSearch} />
+          <Hero
+            problem={problem}
+            setProblem={setProblem}
+            handleSearch={handleSearch}
+          />
           <Features />
         </motion.div>
       </div>

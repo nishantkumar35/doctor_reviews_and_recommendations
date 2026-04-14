@@ -12,50 +12,64 @@ const itemVariants = {
 const Hero = ({ problem, setProblem, handleSearch }) => {
   return (
     <>
-      <motion.div 
+      {/* Badge */}
+      <motion.div
         variants={itemVariants}
-        className="mb-8 flex justify-center"
+        className="mb-7 flex justify-center"
       >
-        <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-slate-400 ring-1 ring-white/10 hover:ring-white/20 transition-all bg-white/5 backdrop-blur-md">
-          <span className="flex items-center gap-2">
-            <Sparkles size={14} className="text-primary" />
-            AI-Powered Healthcare Prediction is here.
-          </span>
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-xs font-medium">
+          <Sparkles size={13} className="text-blue-500" />
+          AI-powered healthcare prediction is here
         </div>
       </motion.div>
 
-      <motion.h1 
+      {/* Heading */}
+      <motion.h1
         variants={itemVariants}
-        className="text-5xl font-bold tracking-tight text-white sm:text-7xl mb-8"
+        className="text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12] mb-6"
       >
-        Find the Right Doctor <br />
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Based on Your Symptoms</span>
+        Find the right doctor <br />
+        <span className="text-blue-600">based on your symptoms</span>
       </motion.h1>
 
-      <motion.p 
+      {/* Subtext */}
+      <motion.p
         variants={itemVariants}
-        className="text-lg leading-8 text-slate-400 mb-12 max-w-2xl mx-auto"
+        className="text-base sm:text-lg leading-relaxed text-slate-500 mb-10 max-w-xl mx-auto"
       >
-        Describe your symptoms in simple words, and our advanced AI will match you with the best-rated specialists in your area.
+        Describe your symptoms in simple words and our advanced AI will
+        match you with the best-rated specialists in your area.
       </motion.p>
 
-      <motion.form 
+      {/* Search bar */}
+      <motion.form
         variants={itemVariants}
         onSubmit={handleSearch}
         className="mx-auto max-w-2xl"
       >
-        <div className="glass p-2 rounded-2xl flex flex-col md:flex-row gap-3">
-          <div className="flex-1">
-            <Input 
-              placeholder="Describe your issue e.g. 'I have a sharp pain in my chest...'" 
+        <div className="
+          flex flex-col sm:flex-row items-stretch gap-2.5
+          bg-white border border-blue-100 rounded-2xl p-2
+          shadow-[0_2px_12px_rgba(59,130,246,0.08)]
+          focus-within:border-blue-300 focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]
+          transition-all duration-200
+        ">
+          <div className="flex-1 flex items-center gap-3 px-3">
+            <Search size={16} className="text-slate-400 flex-shrink-0" />
+            <input
+              type="text"
               value={problem}
               onChange={(e) => setProblem(e.target.value)}
-              icon={Search}
-              className="border-none! bg-transparent!  ring-0! h-12! w-full"
+              placeholder="e.g. sharp pain in my chest, frequent headaches..."
+              className="
+                w-full bg-transparent border-none outline-none ring-0
+                text-sm text-slate-800 placeholder:text-slate-400
+                py-2 h-11
+              "
             />
           </div>
-          <Button type="submit" size="lg" className="h-12 md:w-auto w-full">
-            Search Specialists
+          <Button type="submit" size="lg" className="sm:w-auto w-full shrink-0">
+            Search specialists
           </Button>
         </div>
       </motion.form>
