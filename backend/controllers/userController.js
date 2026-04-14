@@ -46,4 +46,34 @@ const applyDoctor = async (req, res) => {
   }
 };
 
-module.exports = { getMyUserProfile, applyDoctor };
+const updateProfile = async (req, res) => {
+  try {
+    const { name, twoFactorEnabled } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (name) user.name = name;
+    if (typeof twoFactorEnabled !== "undefined") {
+      user.twoFactorEnabled = twoFactorEnabled;
+    }
+
+    await user.save();
+
+    const safeUser = user.toObject();
+    delete safeUser.password;
+    delete safeUser.otpCode;
+    delete safeUser.otpExpiry;
+
+    res.json({
+      message: "Profile updated successfully",
+      user: safeUser,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { getMyUserProfile, applyDoctor, updateProfile };

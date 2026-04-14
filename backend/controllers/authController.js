@@ -11,7 +11,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, twoFactorEnabled } = req.body;
     console.log("BODY:", req.body);
     console.log("FILE:", req.file);
     let imageurl = null;
@@ -35,6 +35,7 @@ const register = async (req, res) => {
       password: hashed,
       role,
       image: imageurl,
+      twoFactorEnabled: twoFactorEnabled === "true" || twoFactorEnabled === true,
     });
 
     res.json({ message: "Registered successfully" });

@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Settings, History, Briefcase, Star, Trash, Pencil, X, Check } from 'lucide-react';
+import { User, Settings, History, Briefcase, Star, Trash, Pencil, X, Check, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import { Link } from 'react-router-dom';
-import { reviewAPI } from '../services/api';
+import { reviewAPI, userAPI } from '../services/api';
 
 const UserDashboard = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingReview, setEditingReview] = useState(null);
   const [editComment, setEditComment] = useState('');
-  const { user } = useAuth();
+  const { user, fetchUserProfile } = useAuth();
+  const [toggling2FA, setToggling2FA] = useState(false);
 
   useEffect(() => {
     if (user) fetchReviews();
@@ -47,6 +48,18 @@ const UserDashboard = () => {
       await fetchReviews();
     } catch (err) {
       alert('Failed to update review');
+    }
+  };
+
+  const handleToggle2FA = async () => {
+    try {
+      setToggling2FA(true);
+      await userAPI.updateProfile({ twoFactorEnabled: !user.twoFactorEnabled });
+      await fetchUserProfile();
+    } catch (err) {
+      alert('Failed to update security settings');
+    } finally {
+      setToggling2FA(false);
     }
   };
 
@@ -213,6 +226,63 @@ const UserDashboard = () => {
               <div style={{ display: 'flex', gap: 10 }}>
                 <button style={primaryBtnStyle}>Edit Profile</button>
                 <button style={outlineBtnStyle}>Change Password</button>
+              </div>
+            </div>
+
+            {/* Security Settings */}
+            <div style={cardStyle}>
+              <SectionHeader icon={<ShieldCheck size={16} color="#1a56db" />} title="Security & Privacy" />
+              
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                padding: '1rem',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: 12
+              }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ 
+                    width: 40, height: 40, borderRadius: '50%', 
+                    background: user?.twoFactorEnabled ? '#f0fdf4' : '#fff1f2',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: `1px solid ${user?.twoFactorEnabled ? '#bbf7d0' : '#fecaca'}`
+                  }}>
+                    {user?.twoFactorEnabled ? <ShieldCheck size={20} color="#16a34a" /> : <ShieldAlert size={20} color="#e11d48" />}
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: 14, fontWeight: 700, color: '#1e3a5f', margin: 0 }}>Two-Step Verification</h4>
+                    <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0' }}>
+                      {user?.twoFactorEnabled 
+                        ? 'Your account is protected with OTP codes' 
+                        : 'Enable OTP for extra login security'}
+                    </p>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={handleToggle2FA}
+                  disabled={toggling2FA}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: toggling2FA ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.15s',
+                    background: user?.twoFactorEnabled ? '#fff' : '#1a56db',
+                    color: user?.twoFactorEnabled ? '#e11d48' : '#fff',
+                    border: user?.twoFactorEnabled ? '1.5px solid #fecaca' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
+                >
+                  {toggling2FA ? (
+                    <div style={{ width: 14, height: 14, border: '2px solid rgba(0,0,0,0.1)', borderTopColor: 'currentColor', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                  ) : user?.twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+                </button>
               </div>
             </div>
 
